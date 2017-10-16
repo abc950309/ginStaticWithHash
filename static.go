@@ -57,6 +57,12 @@ func getFileHash(path string) string {
 	return string(hash.Sum(nil))
 }
 
+func (factory *Factory) join(relativePath, filepath string) {
+	factory.pathes[relativePath] = &File{
+		path: filepath,
+	}
+}
+
 // Static patch Static from gin
 func (factory *Factory) Static(relativePath, root string) *Factory {
 	relativePath = "/" + strings.Trim(relativePath, "/")
@@ -66,17 +72,19 @@ func (factory *Factory) Static(relativePath, root string) *Factory {
 		if err != nil {
 			return err
 		}
-		factory.StaticFile(relativePath+"/"+path, root+"/"+path)
+		factory.join(relativePath+"/"+path, root+"/"+path)
 		return nil
 	})
+
+	factory.engine.Static(relativePath, root)
 	return factory
 }
 
 // StaticFile patch Static from gin
 func (factory *Factory) StaticFile(relativePath, filepath string) *Factory {
-	factory.pathes[relativePath] = &File{
-		path: filepath,
-	}
+	factory.join(relativePath, filepath)
+
+	factory.engine.StaticFile(relativePath, filepath)
 	return factory
 }
 
