@@ -11,6 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var single *Factory
+
 // Engine is an interface like Gin Engine
 type Engine interface {
 	Static(relativePath, root string) gin.IRoutes
@@ -31,10 +33,11 @@ type File struct {
 
 // Install init Static url struct
 func Install(router Engine) *Factory {
-	return &Factory{
+	single = &Factory{
 		engine: router,
 		pathes: map[string]*File{},
 	}
+	return single
 }
 
 // TODO fix
@@ -91,5 +94,5 @@ func (factory *Factory) URL(path string) string {
 
 // URL get Static url with query
 func URL(path string) string {
-	return ""
+	return single.URL(path)
 }
