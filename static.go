@@ -21,8 +21,9 @@ type Engine interface {
 
 // Factory .
 type Factory struct {
-	engine Engine
-	pathes map[string]*File
+	engine   Engine
+	pathes   map[string]*File
+	basePath string
 }
 
 // File .
@@ -33,11 +34,20 @@ type File struct {
 
 // Install init Static url struct
 func Install(router Engine) *Factory {
-	single = &Factory{
-		engine: router,
-		pathes: map[string]*File{},
+	factory := &Factory{
+		engine:   router,
+		pathes:   map[string]*File{},
+		basePath: "",
 	}
-	return single
+	group, ok := router.(*gin.RouterGroup)
+	if ok {
+		factory.basePath = group.BasePath()
+		factory.basePath = "/" + strings.Trim(factory.basePath, "/")
+	}
+	if single == nil {
+		single = factory
+	}
+	return factory
 }
 
 // TODO fix
@@ -95,7 +105,7 @@ func (factory *Factory) URL(path string) string {
 		return path
 	}
 	if file.URL == "" {
-		file.URL = fmt.Sprintf("%s?hash=%s", path, getFileHash(file.path))
+		file.URL = fmt.Sprintf("%s%s?hash=%s", factory.basePath, path, getFileHash(file.path))
 	}
 	return file.URL
 }
